@@ -1,0 +1,20 @@
+/* =============================================================================
+ * 
+ *                                   CHIMP OS
+ *
+ * ========================================================================== */
+
+  A primitive 32 bit operating system.
+
+  Requirements
+  - i686-elf cross compiler (GCC)
+  - Linker and Assembler (Binutils)
+  - QEMU
+  - GRUB bootloader
+
+  Usage
+  $ ./clean.sh
+  $ ./headers.sh
+  $ ./iso.sh
+  $ ./qemu.sh
+
