@@ -18,3 +18,20 @@
   $ ./iso.sh
   $ ./qemu.sh
 
+
+/* =============================================================================
+ *                                  Implementation 
+ * ========================================================================== */
+ Kernel 
+ - 
+
+ Memory Management 
+ - Dynamically giving and using memory to and from programs that request it
+ - Paging or Virtual Memory 
+ - Handle Fragementation
+
+ Command Shell 
+ - Sits on top of kernel
+ - Provide simple I/O and uses kernel for low level tasks
+
+
