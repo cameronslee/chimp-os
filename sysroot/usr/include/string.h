@@ -15,6 +15,10 @@ void* memmove(void*, const void*, size_t);
 void* memset(void*, int, size_t);
 size_t strlen(const char*);
 
+// Testing for buffer overruns
+char *strcpy(char *dest, const char *src);
+char *strncpy(char *dest, const char *src, size_t n);
+
 #ifdef __cplusplus
 }
 #endif
