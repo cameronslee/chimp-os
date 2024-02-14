@@ -1,1 +1,10 @@
+# MISC
+*.swp
 notes.md
+
+# Build it yourself!
+*.iso
+isodir/boot/chimpos.kernel
+sysroot/boot/chimpos.kernel
+sysroot/usr/lib/libk.a
+
