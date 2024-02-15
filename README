@@ -4,7 +4,7 @@
  *
  * ========================================================================== */
 
-  A primitive 32 bit operating system.
+                        A primitive 32 bit operating system.
 
   Requirements
   - i686-elf cross compiler (GCC)
@@ -33,5 +33,18 @@
  Command Shell 
  - Sits on top of kernel
  - Provide simple I/O and uses kernel for low level tasks
+
+
+
+/* =============================================================================
+ *                                 Design Notes 
+ * ========================================================================== */
+
+                                   libc and libk
+
+ libc: hosted library, required. 
+ libk: freestanding library that does not contain any code specific to user space 
+
+ *** note: Both are two versions of the same library located in libc/
 
 

@@ -15,6 +15,8 @@ uintptr_t __stack_chk_guard;
 extern "C" {
 #endif
 
+void __stack_chk_init(void);
+
 __attribute__((noreturn))
 void __stack_chk_fail(void);
 

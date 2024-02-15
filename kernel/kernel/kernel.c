@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <security.h>
 
 #include <kernel/tty.h>
 
@@ -8,10 +10,5 @@ void kernel_main(void) {
 	terminal_initialize();
   const char* d = "                               Welcome to Chimp OS\n";
   terminal_writestring(d);
-  printf("\n");
-  printf("This is a test of printf");
-  printf("\n");
-  printf("This is a test of printf");
-
 }
 

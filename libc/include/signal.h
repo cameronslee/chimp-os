@@ -1,5 +1,5 @@
-#ifndef _STDLIB_H
-#define _STDLIB_H 1
+#ifndef _SIGNAL_H
+#define _SIGNAL_H 1
 
 #include <sys/cdefs.h>
 
@@ -8,11 +8,10 @@ extern "C" {
 #endif
 
 __attribute__((__noreturn__))
-void abort(void);
+void signal();
 
-/* Kernel Panic */
 __attribute__((__noreturn__))
-void panic(char *s);
+void psignal();
 
 #ifdef __cplusplus
 }
