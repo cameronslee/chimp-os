@@ -7,7 +7,6 @@
 extern "C" {
 #endif
 
-// TODO implement
 __attribute__((__noreturn__))
 void signal();
 
