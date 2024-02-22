@@ -110,6 +110,12 @@ gdt_flush:
 flush2:
     ret             # Returns back to the C code!
 
+# Load IDT
+.global idt_load
+.extern idtp
+idt_load:
+    lidt [idtp]
+    ret
 
 4:
 	# At this point, paging is fully set up and enabled.
