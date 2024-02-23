@@ -46,35 +46,33 @@ struct idt_ptr idtp;
 /* lives in boot.S */
 extern void idt_load();
 
-void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags)
+void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags) 
 {
-    /* We'll leave you to try and code this function: take the
-    *  argument 'base' and split it up into a high and low 16-bits,
-    *  storing them in idt[num].base_hi and base_lo. The rest of the
-    *  fields that you must set in idt[num] are fairly self-
-    *  explanatory when it comes to setup */
     idt[num].base_lo = (base & 0xFFFF);
-    idt[num].base_hi = (base >> 16) & 0xFFFF;
+    idt[num].base_hi = ((base >> 16) & 0xFFFF);
+
+    idt[num].sel = sel;
+    idt[num].flags = flags;
 
     idt[num].always0 = 0;
-    idt[num].flags = flags;
-    idt[num].sel = sel;
 }
 
-/* Installs the IDT */
-void idt_install()
+void idt_install() 
 {
+    /* Setup ptr */
     idtp.limit = (sizeof (struct idt_entry) * 256) - 1;
     idtp.base = (unsigned int) &idt;
 
+    /* Clear out IDT*/
     memset(&idt, 0, sizeof(struct idt_entry) * 256);
 
-    // TODO add new ISRS to IDT here
+    /* TODO Add any new ISRs to the IDT here with idt_set_gate */
+
 
     /* Points the processor's internal register to the new IDT */
     idt_load();
 }
-		
+
 /* ======== GDT ======== */
 //TODO was tired of linking errors so implemented here. need to move
 /*                        Segment Descriptor 
@@ -110,7 +108,7 @@ struct gdt_ptr
 struct gdt_entry gdt[3];
 struct gdt_ptr gp;
 
-/* Function lives in boot.S */
+/* asm routine lives in boot.S */
 extern void gdt_flush();
 
 /* Setup a descriptor in the Global Descriptor Table */
@@ -161,7 +159,6 @@ void kernel_main(void) {
     idt_install();
     terminal_initialize();
     const char* d = "                               Welcome to Chimp OS\n";
-    terminal_writestring(d);
     /*
     This should cause a system reset, need to handle with ISR
     int foo = 5 / 0;
