@@ -6,6 +6,75 @@
 
 #define NUM_COLORS 16
 
+/* ======== IDT ======== */
+/*       IDT Entry
+ * -----------------------
+ * |7  6    5  4        0|
+ * -----------------------
+ * |P  DPL     always    |
+ * -----------------------
+ *
+ * P: segment present? 1 = yes
+ * DPL: Ring (0-3)
+ * Always: 01110 (lower bits set to 01110)
+ *
+*/
+struct idt_entry
+{
+    unsigned short base_lo;
+    unsigned short sel;        /* kernel segment */
+    unsigned char always0;     /* ALWAYS set to 0! */
+    unsigned char flags;       
+    unsigned short base_hi;
+} __attribute__((packed));
+
+struct idt_ptr
+{
+    unsigned short limit;
+    unsigned int base;
+} __attribute__((packed));
+
+/* IDT of 256 entries, first 32 are reserved by intel 
+ * If any undefined IDT entry is hit, it normally
+ *  will cause an "Unhandled Interrupt" exception. Any descriptor
+ *  for which the 'presence' bit is cleared (0) will generate an
+ *  "Unhandled Interrupt" exception
+*/
+struct idt_entry idt[256];
+struct idt_ptr idtp;
+
+/* lives in boot.S */
+extern void idt_load();
+
+void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags)
+{
+    /* We'll leave you to try and code this function: take the
+    *  argument 'base' and split it up into a high and low 16-bits,
+    *  storing them in idt[num].base_hi and base_lo. The rest of the
+    *  fields that you must set in idt[num] are fairly self-
+    *  explanatory when it comes to setup */
+    idt[num].base_lo = (base & 0xFFFF);
+    idt[num].base_hi = (base >> 16) & 0xFFFF;
+
+    idt[num].always0 = 0;
+    idt[num].flags = flags;
+    idt[num].sel = sel;
+}
+
+/* Installs the IDT */
+void idt_install()
+{
+    idtp.limit = (sizeof (struct idt_entry) * 256) - 1;
+    idtp.base = (unsigned int) &idt;
+
+    memset(&idt, 0, sizeof(struct idt_entry) * 256);
+
+    // TODO add new ISRS to IDT here
+
+    /* Points the processor's internal register to the new IDT */
+    idt_load();
+}
+		
 /* ======== GDT ======== */
 //TODO was tired of linking errors so implemented here. need to move
 /*                        Segment Descriptor 
@@ -21,7 +90,7 @@
  * |15                            0   15                       0|
  * --------------------------------------------------------------
  *
- */
+*/
 struct gdt_entry
 {
     unsigned short limit_low;
@@ -73,8 +142,7 @@ void gdt_install()
     /* The second entry is our Code Segment. The base address
     *  is 0, the limit is 4GBytes, it uses 4KByte granularity,
     *  uses 32-bit opcodes, and is a Code Segment descriptor.
-    *  Please check the table above in the tutorial in order
-    *  to see exactly what each value means */
+    */
     gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
 
     /* The third entry is our Data Segment. It's EXACTLY the
@@ -90,8 +158,14 @@ void gdt_install()
 /* ======== Kernel ======== */
 void kernel_main(void) {
     gdt_install();
+    idt_install();
     terminal_initialize();
     const char* d = "                               Welcome to Chimp OS\n";
     terminal_writestring(d);
+    /*
+    This should cause a system reset, need to handle with ISR
+    int foo = 5 / 0;
+    terminal_writestring((const char *) foo);
+    */
 }
 
