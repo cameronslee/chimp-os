@@ -267,6 +267,51 @@ const char *exception_messages[] =
     "Reserved"
 };
 
+char* itoa(int value, char *str, int base) {
+    // Handle the case where base is not supported or out of range
+    if (base < 2 || base > 36) {
+        *str = '\0';
+        return str;
+    }
+
+    char *ptr = str;
+    int quotient = value;
+
+    // Handle the case where the value is zero separately
+    if (value == 0) {
+        *ptr++ = '0';
+        *ptr = '\0';
+        return str;
+    }
+
+    // Handle negative numbers
+    if (value < 0 && base == 10) {
+        *ptr++ = '-';
+        quotient = -value;
+    }
+
+    // Convert the value to the specified base
+    while (quotient != 0) {
+        int remainder = quotient % base;
+        *ptr++ = (remainder < 10) ? (remainder + '0') : (remainder - 10 + 'a');
+        quotient /= base;
+    }
+
+    // Add null terminator
+    *ptr = '\0';
+
+    // Reverse the string
+    char *begin = str;
+    char *end = ptr - 1;
+    while (begin < end) {
+        char temp = *begin;
+        *begin++ = *end;
+        *end-- = temp;
+    }
+
+    return str;
+}
+
 /* Stack architecture once ISR runs */
 struct regs
 {
@@ -301,9 +346,9 @@ void kernel_main(void) {
     terminal_initialize();
     const char* d = "                               Welcome to Chimp OS\n";
     terminal_writestring((const char *) d);
+    //asm volatile ("1: jmp 1b"); // pseudo breakpoint
 
     //This should trigger a division by zero isr
-    int foo = 5 / 0;
-    terminal_writestring((const char *) foo);
+    __asm__  ("div %0" :: "r"(0));
 }
 
