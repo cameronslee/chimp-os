@@ -51,7 +51,7 @@ void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, uns
     // apply bitmask to preserve lower 16 bits
     idt[num].base_lo = (base & 0xFFFF); 
     // shift 16 bits, apply bit mask for upper 16 bits for safety
-    idt[num].base_hi = ((base >> 16) & 0xFFFF);
+    idt[num].base_hi = (base >> 16) & 0xFFFF;
 
     idt[num].sel = sel;
     idt[num].always0 = 0;
@@ -267,6 +267,51 @@ const char *exception_messages[] =
     "Reserved"
 };
 
+char* itoa(int value, char* str, int base) {
+    // Handle the case where base is not supported or out of range
+    if (base < 2 || base > 36) {
+        *str = '\0';
+        return str;
+    }
+
+    char* ptr = str;
+    int quotient = value;
+
+    // Handle the case where the value is zero separately
+    if (value == 0) {
+        *ptr++ = '0';
+        *ptr = '\0';
+        return str;
+    }
+
+    // Handle negative numbers
+    if (value < 0 && base == 10) {
+        *ptr++ = '-';
+        quotient = -value;
+    }
+
+    // Convert the value to the specified base
+    while (quotient != 0) {
+        int remainder = quotient % base;
+        *ptr++ = (remainder < 10) ? (remainder + '0') : (remainder - 10 + 'a');
+        quotient /= base;
+    }
+
+    // Add null terminator
+    *ptr = '\0';
+
+    // Reverse the string
+    char* begin = str;
+    char* end = ptr - 1;
+    while (begin < end) {
+        char temp = *begin;
+        *begin++ = *end;
+        *end-- = temp;
+    }
+
+    return str;
+}
+
 /* Stack architecture once ISR runs */
 struct regs
 {
@@ -287,6 +332,8 @@ void fault_handler(struct regs *r)
 {
     if (r->int_no < 32)
     {
+        char *buf;
+        puts(itoa(r->int_no, buf, 10));
         puts(exception_messages[r->int_no]);
         puts(" Exception. System Halted!\n");
         for (;;);
@@ -299,11 +346,16 @@ void kernel_main(void) {
     idt_install();
     isrs_install();
     terminal_initialize();
-    const char* d = "                               Welcome to Chimp OS\n";
+
+    //asm volatile ("1: jmp 1b"); // pseudo breakpoint
+    const char* d = "Welcome to Chimp OS\n";
     terminal_writestring((const char *) d);
 
     //This should trigger a division by zero isr
-    int foo = 5 / 0;
-    terminal_writestring((const char *) foo);
+    __asm__  ("div %0" :: "r"(0));
+
+
+    
+    
 }
 
