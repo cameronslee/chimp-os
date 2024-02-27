@@ -5,6 +5,64 @@
 #include <kernel/tty.h>
 
 #define NUM_COLORS 16
+#define SYS_FREQ 100
+
+/* ======== Helpers ======== */
+unsigned char inportb (unsigned short _port)
+{
+    unsigned char rv;
+    __asm__ __volatile__ ("inb %1, %0" : "=a" (rv) : "dN" (_port));
+    return rv;
+}
+
+void outportb(unsigned short port, unsigned char value) {
+    asm volatile ("outb %0, %1" : : "a"(value), "Nd"(port));
+}
+
+char* itoa(int value, char *str, int base) {
+    // Handle the case where base is not supported or out of range
+    if (base < 2 || base > 36) {
+        *str = '\0';
+        return str;
+    }
+
+    char *ptr = str;
+    int quotient = value;
+
+    // Handle the case where the value is zero separately
+    if (value == 0) {
+        *ptr++ = '0';
+        *ptr = '\0';
+        return str;
+    }
+
+    // Handle negative numbers
+    if (value < 0 && base == 10) {
+        *ptr++ = '-';
+        quotient = -value;
+    }
+
+    // Convert the value to the specified base
+    while (quotient != 0) {
+        int remainder = quotient % base;
+        *ptr++ = (remainder < 10) ? (remainder + '0') : (remainder - 10 + 'a');
+        quotient /= base;
+    }
+
+    // Add null terminator
+    *ptr = '\0';
+
+    // Reverse the string
+    char *begin = str;
+    char *end = ptr - 1;
+    while (begin < end) {
+        char temp = *begin;
+        *begin++ = *end;
+        *end-- = temp;
+    }
+
+    return str;
+}
 
 /* ======== IDT ======== */
 /*       IDT Entry
@@ -267,50 +325,6 @@ const char *exception_messages[] =
     "Reserved"
 };
 
-char* itoa(int value, char *str, int base) {
-    // Handle the case where base is not supported or out of range
-    if (base < 2 || base > 36) {
-        *str = '\0';
-        return str;
-    }
-
-    char *ptr = str;
-    int quotient = value;
-
-    // Handle the case where the value is zero separately
-    if (value == 0) {
-        *ptr++ = '0';
-        *ptr = '\0';
-        return str;
-    }
-
-    // Handle negative numbers
-    if (value < 0 && base == 10) {
-        *ptr++ = '-';
-        quotient = -value;
-    }
-
-    // Convert the value to the specified base
-    while (quotient != 0) {
-        int remainder = quotient % base;
-        *ptr++ = (remainder < 10) ? (remainder + '0') : (remainder - 10 + 'a');
-        quotient /= base;
-    }
-
-    // Add null terminator
-    *ptr = '\0';
-
-    // Reverse the string
-    char *begin = str;
-    char *end = ptr - 1;
-    while (begin < end) {
-        char temp = *begin;
-        *begin++ = *end;
-        *end-- = temp;
-    }
-
-    return str;
-}
 
 /* Stack architecture once ISR runs */
 struct regs
@@ -339,9 +353,6 @@ void fault_handler(struct regs *r)
 }
 
 /* ======== IRQ HANDLES ======== */
-void outportb(unsigned short port, unsigned char value) {
-    asm volatile ("outb %0, %1" : : "a"(value), "Nd"(port));
-}
 
 extern void irq0();
 extern void irq1();
@@ -418,8 +429,8 @@ void irq_install()
     idt_set_gate(47, (unsigned)irq15, 0x08, 0x8E);
 }
 
-/* Each of the IRQ ISRs point to this function, rather than
-*  the 'fault_handler' in 'isrs.c'. The IRQ Controllers need
+/* Each of the IRQ ISRs point to this function.
+*  The IRQ Controllers need
 *  to be told when you are done servicing them, so you need
 *  to send them an "End of Interrupt" command (0x20). There
 *  are two 8259 chips: The first exists at 0x20, the second
@@ -430,11 +441,11 @@ void irq_install()
 *  an EOI, you won't raise any more IRQs */
 void irq_handler(struct regs *r)
 {
-    /* This is a blank function pointer */
+    /* blank function pointer */
     void (*handler)(struct regs *r);
 
-    /* Find out if we have a custom handler to run for this
-    *  IRQ, and then finally, run it */
+    /* Search for custom handler to run for this
+    *  IRQ, run it */
     handler = irq_routines[r->int_no - 32];
     if (handler)
     {
@@ -454,21 +465,97 @@ void irq_handler(struct regs *r)
     outportb(0x20, 0x20);
 }
 
+/* ======== Programmable Interval Timer (PIT) ======== */
+/*
+ * Programmable Interval Timer
+ * -----------------------
+ * |7   6 5  4 3     1  0|
+ * -----------------------
+ * |CNTR  RW   Mode  BCD |
+ * -----------------------
+ * CNTR = Counter num (0-2)
+ * RW =  Read Write Mode
+ * Mode =
+ *   0     Interrupt on terminal count
+ *   1     Hardware retriggerable one shot
+ *   2     Rate generator
+ *   3     square wave  
+ *   4     software strobe 
+ *   5     hardware strobe 
+ *
+ * BCD = binary coded decimal
+ *   0 = 16 bit counter
+ *   1 = 4x BCD decay counter
+ */
+void timer_phase(int hz)
+{
+    int divisor = 1193180 / hz;       /* Calculate our divisor */
+    outportb(0x43, 0x36);             /* Set our command byte 0x36 */
+    outportb(0x40, divisor & 0xFF);   /* Set low byte of divisor */
+    outportb(0x40, divisor >> 8);     /* Set high byte of divisor */
+}
+
+int timer_ticks = 0;
+
+void timer_wait(int ticks)
+{
+    unsigned int eticks;
+ 
+    eticks = timer_ticks + ticks;
+    while(timer_ticks < eticks) 
+    {
+        __asm__ __volatile__ ("sti//hlt//cli");
+    }
+}
+
+/* Increment ticks every time the timer fires */
+void timer_handler(struct regs *r)
+{
+    /* Increment our 'tick count' */
+    timer_ticks++;
+
+    /* every 100 clocks, display msg */
+    if (timer_ticks % 100 == 0)
+    {
+        puts("Timer: log \n");
+    }
+}
+
+/* Sets up the system clock by installing the timer handler
+*  into IRQ0 */
+/* 
+ * Set sys clock by installing timer handle to IRQ0
+ * 
+ * set timer phase at 100 hz
+*/
+void timer_install()
+{
+    timer_phase(SYS_FREQ);
+
+    /* Installs 'timer_handler' to IRQ0 */
+    irq_install_handler(0, timer_handler);
+}
+
 /* ======== Kernel ======== */
 void kernel_main(void) {
     gdt_install();
     idt_install();
     isrs_install();
     irq_install();
+    timer_install();
 
     __asm__ __volatile__ ("sti"); 
 
     terminal_initialize();
+
+    // wait 5 seconds
+    timer_wait(500);
     const char* d = "                               Welcome to Chimp OS\n";
     terminal_writestring((const char *) d);
+
     //asm volatile ("1: jmp 1b"); // pseudo breakpoint
 
     //This should trigger a division by zero isr
-    __asm__  ("div %0" :: "r"(0));
+    //__asm__  ("div %0" :: "r"(0));
 }
 
