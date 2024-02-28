@@ -9,6 +9,7 @@
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
+
 // 1024th page reservered for VGA text buffer - see boot.S
 static uint16_t* const VGA_MEMORY = (uint16_t*) 0xC03FF000;
 
@@ -22,9 +23,9 @@ void terminal_initialize(void) {
 	terminal_row = 0;
 	terminal_column = 0;
 
-  /* Color */
-  curr_color = VGA_COLOR_LIGHT_GREY;
-	terminal_color = vga_entry_color(curr_color, VGA_COLOR_BLACK);
+    /* Color */
+    curr_color = VGA_COLOR_WHITE;
+	terminal_color = vga_entry_color(curr_color, VGA_COLOR_CYAN);
 
 	terminal_buffer = VGA_MEMORY;
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {

@@ -1,40 +1,32 @@
-                           Chimp OS
-
-              A primitive 32 bit operating system.
-
-          This is a recreational programming project.
+Chimp OS
+A primitive 32 bit operating system.
+This is a recreational programming project.
 
 Developing a 32 bit operating system for the x86 i686 architecture.
 
-  Requirements
-  - i686-elf cross compiler (GCC)
-  - Linker and Assembler (Binutils)
-  - QEMU
-  - GRUB bootloader
+Requirements
+- i686-elf cross compiler (GCC)
+- Linker and Assembler (Binutils)
+- QEMU
+- GRUB bootloader
 
-  Usage
-  $ ./clean.sh
-  $ ./headers.sh
-  $ ./iso.sh
-  $ ./qemu.sh
-
-
-                                  Implementation 
-
- Kernel Design:
- - Paging (Virtual Memory Space) 
- - Multithreaded Kernel
-
- Command Shell 
- - Sits on top of kernel
- - Provide simple I/O and uses kernel for low level tasks
+Usage
+$ ./clean.sh
+$ ./headers.sh
+$ ./iso.sh
+$ ./qemu.sh
 
 
+Kernel Design
+- Paging (Virtual Memory Space) 
+- Multithreaded Kernel
+Command Shell 
+- Sits on top of kernel
+- Provide simple I/O and uses kernel for low level tasks
 
-                                   Design Notes 
-
- libc and libk
- libc: hosted library, required. 
- libk: freestanding library that does not contain any code specific to user space 
+Design Notes
+libc and libk
+libc: hosted library, required. 
+libk: freestanding library that does not contain any code specific to user space 
 
 
