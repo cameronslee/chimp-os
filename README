@@ -1,10 +1,10 @@
-                                      Chimp OS
+                           Chimp OS
 
-                        A primitive 32 bit operating system.
+              A primitive 32 bit operating system.
 
-                     This is a recreational programming project.
+          This is a recreational programming project.
 
-         Developing a 32 bit operating system for the x86 i686 architecture.
+Developing a 32 bit operating system for the x86 i686 architecture.
 
   Requirements
   - i686-elf cross compiler (GCC)
