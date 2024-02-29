@@ -4,8 +4,10 @@
 #include <kernel/irq.h>
 
 #define SYS_FREQ 100
+#define IRQ0 0 
 
 unsigned int timer_ticks = 0;
+unsigned int sys_uptime = 0;
 
 void timer_phase(int hz)
 {
@@ -18,7 +20,6 @@ void timer_phase(int hz)
 void timer_wait(int ticks)
 {
     unsigned int eticks;
- 
     eticks = timer_ticks + ticks;
     while(timer_ticks < eticks) 
     {
@@ -32,10 +33,10 @@ void timer_handler(struct regs *r)
     /* Increment our 'tick count' */
     timer_ticks++;
 
-    /* every 100 clocks, display msg */
+    /* every 100 clocks, 1 second has gone by */
     if (timer_ticks % 100 == 0)
     {
-        puts("======");
+        sys_uptime += 1;
     }
 }
 
@@ -48,9 +49,10 @@ void timer_handler(struct regs *r)
 */
 void timer_install()
 {
-    timer_phase(SYS_FREQ);
 
     /* Installs 'timer_handler' to IRQ0 */
-    irq_install_handler(0, timer_handler);
+    irq_install_handler(IRQ0, timer_handler);
+    timer_phase(SYS_FREQ);
+
 }
 

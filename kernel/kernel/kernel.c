@@ -11,27 +11,33 @@
 #include <kernel/pit.h>
 #include <kernel/keyboard.h>
 
+void splash_screen() {
+    const char* d = "Welcome to Chimp OS";
+    terminal_writestring((const char *) d);
+}
 
 /* ======== Kernel ======== */
 void kernel_main(void) {
     gdt_install();
+    terminal_initialize();
     idt_install();
     isrs_install();
     irq_install();
-    timer_install();
 
-    terminal_initialize();
     keyboard_install();
 
-    // TODO implement system timer
-
+    // allow for IRQs 
     __asm__ __volatile__ ("sti"); 
+    
+    //install system timer
+    timer_install();
+    
+    splash_screen();
 
-    // wait 5 seconds
-    timer_wait(500);
+    //event loop - FIXME as of right now, monotasking system
+    while (1) {
 
-    const char* d = "                               Welcome to Chimp OS\n";
-    terminal_writestring((const char *) d);
+    }
 
     //asm volatile ("1: jmp 1b"); // pseudo breakpoint
 

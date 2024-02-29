@@ -17,15 +17,18 @@ static size_t terminal_row;
 static size_t terminal_column;
 static uint8_t terminal_color;
 static uint16_t* terminal_buffer;
-unsigned int curr_color;
+
+unsigned int curr_fg_color;
+unsigned int curr_bg_color;
 
 void terminal_initialize(void) {
 	terminal_row = 0;
 	terminal_column = 0;
 
-    /* Color */
-    curr_color = VGA_COLOR_WHITE;
-	terminal_color = vga_entry_color(curr_color, VGA_COLOR_CYAN);
+    // Set colors to draw
+    curr_fg_color = VGA_COLOR_WHITE;
+    curr_bg_color = VGA_COLOR_CYAN;
+	terminal_color = vga_entry_color(curr_fg_color, curr_bg_color);
 
 	terminal_buffer = VGA_MEMORY;
 	for (size_t y = 0; y < VGA_HEIGHT; y++) {
@@ -47,6 +50,9 @@ void terminal_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
 
 void terminal_putchar(char c) {
 	unsigned char uc = c;
+
+    // TODO handle newline characters and such
+
 	terminal_putentryat(uc, terminal_color, terminal_column, terminal_row);
 	if (++terminal_column == VGA_WIDTH) {
 		terminal_column = 0;
