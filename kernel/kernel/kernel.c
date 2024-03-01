@@ -11,20 +11,14 @@
 #include <kernel/pit.h>
 #include <kernel/keyboard.h>
 
-void splash_screen() {
-    const char* d = "Welcome to Chimp OS";
-    terminal_writestring((const char *) d);
-}
-
-/* ======== Kernel ======== */
 void kernel_main(void) {
     gdt_install();
     terminal_initialize();
     idt_install();
     isrs_install();
     irq_install();
-
-    keyboard_install();
+    
+    keyboard_install(); 
 
     // allow for IRQs 
     __asm__ __volatile__ ("sti"); 
@@ -32,7 +26,16 @@ void kernel_main(void) {
     //install system timer
     timer_install();
     
+    // TODO we need to disable printing at this stage.
+    // only accept different boot options
     splash_screen();
+
+    // prompt
+    char *usr = "root";
+    char *device_name = "chimpos-dev";
+    char *curr_dir = "~";
+    terminal_prompt(usr, device_name, curr_dir);
+
 
     //event loop - FIXME as of right now, monotasking system
     while (1) {

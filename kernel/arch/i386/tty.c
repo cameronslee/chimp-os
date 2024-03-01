@@ -108,3 +108,92 @@ void terminal_write(const char* data, size_t size) {
 void terminal_writestring(const char* data) {
 	terminal_write(data, strlen(data));
 }
+
+void splash_screen() {
+    unsigned int spacing_y = 2;
+    unsigned int spacing_x = VGA_WIDTH / 2;
+    const char* d;
+    const char* msg;
+
+    // print border
+    d = "=";
+    for (int i = 0; i < VGA_WIDTH; i++) 
+        terminal_writestring((const char *) d);
+    
+    // space y
+    d = "\n";
+    for (int i = 0; i < spacing_y; i++) 
+        terminal_writestring((const char *) d);
+    
+    // space x
+    msg  = "Welcome to Chimp OS!";
+    d = " ";
+    for (int i = 0; i < spacing_x - (strlen(msg) / 2); i++) 
+        terminal_writestring((const char *) d);
+    
+    terminal_writestring((const char *) msg);
+
+    // space y
+    d = "\n";
+    for (int i = 0; i < spacing_y; i++) 
+        terminal_writestring((const char *) d);
+
+    const char *banana[] = {
+        "   //\\",
+        "   V  \\",
+        "    \\  \\_",
+        "     \\,'.`-.",
+        "      |\\ `. `.       ",
+        "      ( \\  `. `-.                        _,.-:\\",
+        "       \\ \\   `.  `-._             __..--' ,-';/",
+        "        \\ `.   `-.   `-..___..---'   _.--' ,'/",
+        "         `. `.    `-._        __..--'    ,' /",
+        "           `. `-_     ``--..''       _.-' ,'",
+        "             `-_ `-.___        __,--'   ,'",
+        "                `-.__  `----\\\"\"\"\"__.-'",
+        "                   `--..____..--'"
+    };
+
+    for (int i = 0; i < sizeof(banana) / sizeof(banana[0]); i++) {
+        int spaces = (35 - strlen(banana[0])) / 2;
+        for (int j = 0; j < spaces; j++) {
+            
+            terminal_writestring((const char *)" ");
+        }
+        terminal_writestring((const char *) banana[i]);
+        terminal_writestring((const char *)"\n");
+    }
+
+    // space y
+    d = "\n";
+    for (int i = 0; i < spacing_y; i++) 
+        terminal_writestring((const char *) d);
+
+    // space x
+    msg = "*****"; // full loading bar
+    d = " ";
+    for (int i = 0; i < spacing_x - (strlen(msg) / 2) - 1; i++) 
+        terminal_writestring((const char *) d);
+
+    // "loading bar" - FIXME sync to RTC for loading additonal resources
+    int loading_bar_index = 0;
+    int loading_bar_time = 500; // 500 ms
+
+    while (loading_bar_index < loading_bar_time) {
+        terminal_writestring((const char *)"* ");
+        loading_bar_index += 100;
+        timer_wait(100);
+    }
+
+    terminal_clear();
+}
+
+// TODO, read PS1 from a shell config when implemented
+void terminal_prompt(const char *usr, const char *device_name, const char *curr_dir) {
+    terminal_writestring((const char *) usr);
+    terminal_writestring((const char *)"@");
+    terminal_writestring((const char *) device_name);
+    terminal_writestring((const char *)" ");
+    terminal_writestring((const char *) curr_dir);
+    terminal_writestring((const char *)"$ ");
+}
