@@ -73,6 +73,10 @@ void terminal_putchar(char c) {
     // backspace
     if (c == BACKSPACE && terminal_column != 0) {
         terminal_column -= 1;
+        // "remove" char from buffer
+        uc = ' ';
+        terminal_putentryat(uc, terminal_color, terminal_column, terminal_row);
+        terminal_column -= 1;
     }
     // tab: inc col to a point that is divisible by 8
     else if (c == TAB) {

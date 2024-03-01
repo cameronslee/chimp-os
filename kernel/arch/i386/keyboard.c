@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <kernel/keyboard.h>
 #include <kernel/irq.h>
+#include <kernel/tty.h>
 
 unsigned char kbdus[128] =
 {
@@ -59,7 +60,7 @@ void keyboard_handler(struct regs *r)
     else
     {
         /* Handle key presses. If held , multiple interrupts will be issued */
-        puts("LOG");
+        terminal_putchar(kbdus[scancode]);
     }
 }
 
