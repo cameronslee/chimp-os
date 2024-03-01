@@ -8,6 +8,18 @@
 
 #include "vga.h"
 
+#include <limits.h> // INT_MIN and INT_MAX
+
+/*
+ * SCROLLBACK HANDLE
+ * 
+ * Alloc enough space for ONE terminal screen in the 
+ * terminal buffer. (VGA_HEIGHT * VGA_WIDTH)
+ * 
+ * Upon term scrolling we alloc more space dynamically 
+ *
+ * TODO implement a memory manager!!!
+*/
 #define MAX_SCROLLBACK 10000 // DEFAULT!
 #define BACKSPACE 0x08 
 #define TAB 0x09 
@@ -186,7 +198,7 @@ void splash_screen() {
     while (loading_bar_index < loading_bar_time) {
         terminal_writestring((const char *)"* ");
         loading_bar_index += 100;
-        timer_wait(100);
+        timer_wait(25);
     }
 
     terminal_clear();
