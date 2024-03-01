@@ -4,8 +4,13 @@
 #include <string.h>
 
 #include <kernel/tty.h>
+#include <kernel/pit.h>
 
 #include "vga.h"
+
+#define MAX_SCROLLBACK 10000 // DEFAULT!
+#define BACKSPACE 0x08 
+#define TAB 0x09 
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -39,6 +44,20 @@ void terminal_initialize(void) {
 	}
 }
 
+/* reset cursor positions and clear terminal buffer */
+void terminal_clear()
+{
+	terminal_row = 0;
+	terminal_column = 0;
+
+	for (size_t y = 0; y < VGA_HEIGHT; y++) {
+		for (size_t x = 0; x < VGA_WIDTH; x++) {
+			const size_t index = y * VGA_WIDTH + x;
+			terminal_buffer[index] = vga_entry(' ', terminal_color);
+		}
+	}
+}
+
 void terminal_setcolor(uint8_t color) {
 	terminal_color = color;
 }
@@ -50,10 +69,30 @@ void terminal_putentryat(unsigned char c, uint8_t color, size_t x, size_t y) {
 
 void terminal_putchar(char c) {
 	unsigned char uc = c;
-
-    // TODO handle newline characters and such
-
-	terminal_putentryat(uc, terminal_color, terminal_column, terminal_row);
+    
+    // backspace
+    if (c == BACKSPACE && terminal_column != 0) {
+        terminal_column -= 1;
+    }
+    // tab: inc col to a point that is divisible by 8
+    else if (c == TAB) {
+        terminal_column = (terminal_column + 8) & ~(8 - 1);
+    }
+    // carriage return 
+    else if (c == '\r') {
+        terminal_column = 0;
+    }
+    // newline handle, behave like <CR> and then move down a row
+    else if (c == '\n') {
+        terminal_column = 0;
+        terminal_row += 1;
+    }
+    // we print the character
+    else if (c >= ' ') {
+        terminal_putentryat(uc, terminal_color, terminal_column, terminal_row);
+    }
+    
+    // TODO handle scrollback buffering
 	if (++terminal_column == VGA_WIDTH) {
 		terminal_column = 0;
 		if (++terminal_row == VGA_HEIGHT)
