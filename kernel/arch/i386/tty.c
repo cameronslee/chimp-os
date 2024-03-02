@@ -204,7 +204,7 @@ void splash_screen() {
     terminal_clear();
 }
 
-// TODO, read PS1 from a shell config when implemented
+// TODO, read PS1 from a shell config when implemented. (need VFS)
 void terminal_prompt(const char *usr, const char *device_name, const char *curr_dir) {
     terminal_writestring((const char *) usr);
     terminal_writestring((const char *)"@");
